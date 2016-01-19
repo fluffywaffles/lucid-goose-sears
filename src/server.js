@@ -8,7 +8,7 @@ var app = express()
 app.use(express.static('public'))
 
 app.get('/', function (req, res) {
-  res.redirect('dist/index.html')
+  res.redirect('public/index.html')
 })
 
 http.createServer(app).listen(3000)

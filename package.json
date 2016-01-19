@@ -19,10 +19,17 @@
   "devDependencies": {
     "dotenv": "^1.2.0",
     "gulp": "^3.9.0",
+    "gulp-concat": "^2.6.0",
     "gulp-jade": "^1.1.0",
     "gulp-load-plugins": "^1.2.0",
     "gulp-plumber": "^1.0.1",
+    "gulp-sourcemaps": "^1.6.0",
     "gulp-stylus": "^2.2.0",
-    "gulp-supervisor": "^0.1.2"
+    "gulp-supervisor": "^0.1.2",
+    "gulp-uglify": "^1.5.1"
+  },
+  "dependencies": {
+    "basic-auth-connect": "^1.0.0",
+    "express": "^4.13.3"
   }
 }
