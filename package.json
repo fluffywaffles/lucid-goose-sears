@@ -15,5 +15,14 @@
   "bugs": {
     "url": "https://github.com/skorlir/lucid-goose-sears/issues"
   },
-  "homepage": "https://github.com/skorlir/lucid-goose-sears#readme"
+  "homepage": "https://github.com/skorlir/lucid-goose-sears#readme",
+  "devDependencies": {
+    "dotenv": "^1.2.0",
+    "gulp": "^3.9.0",
+    "gulp-jade": "^1.1.0",
+    "gulp-load-plugins": "^1.2.0",
+    "gulp-plumber": "^1.0.1",
+    "gulp-stylus": "^2.2.0",
+    "gulp-supervisor": "^0.1.2"
+  }
 }
