@@ -1,0 +1,19 @@
+{
+  "name": "lucid-goose-sears",
+  "version": "0.1.0",
+  "description": "Sears admin app for Lucid Goose",
+  "main": "",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/skorlir/lucid-goose-sears.git"
+  },
+  "author": "@skorlir",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/skorlir/lucid-goose-sears/issues"
+  },
+  "homepage": "https://github.com/skorlir/lucid-goose-sears#readme"
+}
