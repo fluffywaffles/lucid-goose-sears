@@ -1,5 +1,9 @@
 # Sears Admin Application
 
+## Get started
+
+`npm i && gulp serve`
+
 Can:
 
   1. Upload photos (AWS S3)
