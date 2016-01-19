@@ -1,10 +1,10 @@
 # Sears Admin Application
 
-## Get started
+### Get started
 
 `npm i && gulp serve`
 
-Can:
+### "Spec"
 
   1. Upload photos (AWS S3)
   2. Select some number of photos to be "featured" (max 5?)
