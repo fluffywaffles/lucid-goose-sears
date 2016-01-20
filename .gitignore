@@ -2,3 +2,4 @@ Sears_adminApp
 node_modules
 .env
 public
+src/scripts/_consts.js

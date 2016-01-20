@@ -24,7 +24,9 @@ gulp.task('js', function () {
     .pipe(gulp.dest('public'))
 })
 
-gulp.task('watch', [ 'jade', 'stylus', 'js' ], function () {
+gulp.task('build', [ 'jade', 'stylus', 'js' ])
+
+gulp.task('watch', [ 'build' ], function () {
   gulp.watch('src/jade/**/*.jade', [ 'jade' ])
   gulp.watch('src/styles/main.styl', [ 'stylus' ])
   gulp.watch('src/scripts/**/*.js', [ 'js' ])
