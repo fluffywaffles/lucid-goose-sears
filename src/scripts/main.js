@@ -6,6 +6,7 @@ var topbar         = $1('.top')
   , unfeaturedImg  = $('.unfeatured img')
   , uploadBtn      = $1('button.upload')
   , logoutBtn      = $1('button.logout')
+  , featuredList   = [ ]
 
 var dragElement = originDropzone = null
 
@@ -32,6 +33,17 @@ function toggleFeaturedHandler (onoff) {
     var sure = confirm((onoff ? '' : 'un') + 'feature this image?')
 
     if (!sure) return
+
+    if (onoff) {
+      featuredList.push(this.src)
+      syncFeatured()
+    } else {
+      var idx = featuredList.indexOf(this.src)
+      if (~idx) {
+        featuredList.splice(idx, 1)
+        syncFeatured()
+      }
+    }
 
     this.parentElement.remove()
     var newParent = (onoff ? featuredThumbs : unfeatured)
@@ -110,6 +122,17 @@ window.addEventListener('scroll', toggleClassAtScroll({
 
 negativeSpaceCheck()
 
+function createThumb(blob) {
+  var img = document.createElement('img')
+  img.src = blob.url
+  var thumb = document.createElement('div')
+  thumb.className = 'thumb'
+  thumb.appendChild(img)
+  setupOnDrag(img)
+
+  return thumb
+}
+
 filepicker.setKey(FILEPICKER_API_KEY)
 
 uploadBtn.on('click', function () {
@@ -121,9 +144,54 @@ uploadBtn.on('click', function () {
   }, function success (blob) {
     // cool, success.
     console.log('Upload successful.')
+    console.log(blob)
+
+    qwest.put('/photos', blob)
+      .then(function (xhr, response) {
+        console.log(response)
+      })
+      .catch(function (err, xhr, response) {
+        console.error(err)
+      })
+
+    var thumb = createThumb(blob)
+    unfeatured.appendChild(thumb)
     // add image to unfeatured
   }, function error (FPError) {
     console.log(FPError.toString())
-    alert('There was an error uploading your file! Please try again.')
   })
 })
+
+qwest.get('/featured')
+  .catch(function (err, xhr, response) {
+    console.error(err)
+  })
+  .then(function (xhr, response) {
+    featuredList = response
+    return qwest.get('/photos')
+  })
+  .catch(function (err, xhr, response) {
+    console.error(err)
+  })
+  .then(function (xhr, response) {
+    response.forEach(function (imgBlob) {
+      var thumb = createThumb(imgBlob)
+      if (~featuredList.indexOf(imgBlob.url)) {
+        featuredThumbs.appendChild(thumb)
+        thumb.children[0].on('click', toggleFeaturedHandler(false))
+      } else {
+        unfeatured.appendChild(thumb)
+        thumb.children[0].on('click', toggleFeaturedHandler(true))
+      }
+    })
+  })
+
+function syncFeatured () {
+  qwest.put('/featured', featuredList)
+    .catch(function (err, xhr, response) {
+      console.error(err)
+    })
+    .then(function (xhr, response) {
+      console.log(response)
+    })
+}

@@ -3,3 +3,4 @@ node_modules
 .env
 public
 src/scripts/_consts.js
+photos

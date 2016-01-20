@@ -16,10 +16,10 @@ gulp.task('stylus', function () {
 })
 
 gulp.task('js', function () {
-  gulp.src('src/scripts/*.js')
+  gulp.src([ 'src/scripts/qwest.min.js', 'src/scripts/*.js' ])
     .pipe($.sourcemaps.init())
     .pipe($.concat('main.js'))
-    .pipe($.uglify())
+    //.pipe($.uglify())
     .pipe($.sourcemaps.write())
     .pipe(gulp.dest('public'))
 })
