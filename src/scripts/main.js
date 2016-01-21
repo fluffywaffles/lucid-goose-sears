@@ -34,16 +34,7 @@ function toggleFeaturedHandler (onoff) {
 
     if (!sure) return
 
-    if (onoff) {
-      featuredList.push(this.src)
-      syncFeatured()
-    } else {
-      var idx = featuredList.indexOf(this.src)
-      if (~idx) {
-        featuredList.splice(idx, 1)
-        syncFeatured()
-      }
-    }
+    updateFeaturedList(this.src, onoff)
 
     this.parentElement.remove()
     var newParent = (onoff ? featuredThumbs : unfeatured)
@@ -56,6 +47,19 @@ function toggleFeaturedHandler (onoff) {
   }
 }
 
+function updateFeaturedList (it, feature) {
+  if (feature) {
+    featuredList.push(it)
+    syncFeatured()
+  } else {
+    var idx = featuredList.indexOf(it)
+    if (~idx) {
+      featuredList.splice(idx, 1)
+      syncFeatured()
+    }
+  }
+}
+
 // Drop zones
 function onDrop (event) {
   event.preventDefault()
@@ -63,6 +67,7 @@ function onDrop (event) {
   if (originDropzone && originDropzone !== this) {
     dragElement.remove()
     this.appendChild(dragElement)
+    updateFeaturedList(dragElement.children[0].src, originDropzone === unfeatured)
   }
 }
 
@@ -167,7 +172,7 @@ qwest.get('/featured')
     console.error(err)
   })
   .then(function (xhr, response) {
-    featuredList = response
+    featuredList = response || [ ]
     return qwest.get('/photos')
   })
   .catch(function (err, xhr, response) {
