@@ -6,6 +6,7 @@ var topbar         = $1('.top')
   , unfeaturedImg  = $('.unfeatured img')
   , uploadBtn      = $1('button.upload')
   , logoutBtn      = $1('button.logout')
+  , uploadInput    = $1('#upload')
   , featuredList   = [ ]
 
 var dragElement = originDropzone = null
@@ -127,9 +128,9 @@ window.addEventListener('scroll', toggleClassAtScroll({
 
 negativeSpaceCheck()
 
-function createThumb(blob) {
+function createThumb(s3Response) {
   var img = document.createElement('img')
-  img.src = blob.url
+  img.src = s3Response.Location
   var thumb = document.createElement('div')
   thumb.className = 'thumb'
   thumb.appendChild(img)
@@ -138,33 +139,32 @@ function createThumb(blob) {
   return thumb
 }
 
-filepicker.setKey(FILEPICKER_API_KEY)
-
 uploadBtn.on('click', function () {
-  filepicker.pick({
-    mimetype: 'image/*',
-    container: 'window',
-    services: ['COMPUTER', 'FACEBOOK', 'BOX', 'DROPBOX', 'INSTAGRAM', 'TWITTER', 'GMAIL', 'URL', 'CONVERT'],
-    maxSize: 1024*1024*1024 // max size: 1GB
-  }, function success (blob) {
-    // cool, success.
-    console.log('Upload successful.')
-    console.log(blob)
+  uploadInput.click()
+})
 
-    qwest.put('/photos', blob)
-      .then(function (xhr, response) {
-        console.log(response)
-      })
-      .catch(function (err, xhr, response) {
-        console.error(err)
-      })
+uploadInput.on('change', function () {
+  console.log(this.files)
+  var upload = this.files[0]
 
-    var thumb = createThumb(blob)
-    unfeatured.appendChild(thumb)
-    // add image to unfeatured
-  }, function error (FPError) {
-    console.log(FPError.toString())
-  })
+  if (!upload.type.startsWith('image/')) {
+    console.error('Tried to upload a non-image file, you fool.')
+    alert('That doesn\'t look like an image file; the upload cannot continue.')
+    return
+  }
+
+  var fd = new FormData()
+  fd.append('photo', upload)
+
+  qwest.put('/photos', fd)
+    .catch(function (err, xhr, response) {
+      console.error(err)
+    })
+    .then(function (xhr, response) {
+      console.info(response)
+      var thumb = createThumb(response)
+      unfeatured.appendChild(thumb)
+    })
 })
 
 qwest.get('/featured')
@@ -179,9 +179,10 @@ qwest.get('/featured')
     console.error(err)
   })
   .then(function (xhr, response) {
-    response.forEach(function (imgBlob) {
-      var thumb = createThumb(imgBlob)
-      if (~featuredList.indexOf(imgBlob.url)) {
+    response.forEach(function (s3Img) {
+      console.log(s3Img)
+      var thumb = createThumb(s3Img)
+      if (~featuredList.indexOf(s3Img.Location)) {
         featuredThumbs.appendChild(thumb)
         thumb.children[0].on('click', toggleFeaturedHandler(false))
       } else {
