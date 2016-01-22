@@ -1,6 +1,6 @@
 var express = require('express')
   , bodyParser = require('body-parser')
-  , auth    = require('basic-auth-connect')
+  , basicAuth  = require('basic-auth-connect')
   , http    = require('http')
   , level   = require('level')
   , AWS     = require('aws-sdk')
@@ -25,13 +25,6 @@ var app = express()
 app.use(bodyParser.json())
 app.use(busboy())
 app.set('s3bucket', process.env['AWS_S3_BUCKET'])
-
-// may need to add a ..
-app.use(express.static('public'))
-
-app.get('/', function (req, res) {
-  res.redirect('public/index.html')
-})
 
 app.put('/photos', function (req, res) {
   // store photo blob info in cache
@@ -116,6 +109,14 @@ app.delete('/photos', function (req, res) {
     }
   })
 })
+
+// NOTE(jordan): middleware order matters
+app.use(basicAuth(
+  process.env.BASIC_AUTH_USERNAME,
+  process.env.BASIC_AUTH_PASSWORD
+))
+
+app.use(express.static('public'))
 
 function bucketUrl (object) {
   return 'https://' + app.get('s3bucket') + '.s3.amazonaws.com/' + object.Key
