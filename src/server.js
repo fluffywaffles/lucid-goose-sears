@@ -39,7 +39,7 @@ app.put('/photos', function (req, res) {
     req.busboy.on('file', function (fieldName, file, filename, encoding, mimetype) {
       s3.upload({
         Bucket: app.get('s3bucket'),
-        Key: '/photos/' + filename,
+        Key: 'photos/' + filename,
         Body: file
       }, function (err, data) {
         if (err) console.error(err), res.status(500).send(err)
@@ -61,11 +61,6 @@ app.put('/photos', function (req, res) {
 app.put('/featured', function (req, res) {
   var featuredList = req.body
   console.log(featuredList)
-
-  // NOTE(jordan): inefficiently remove dupes
-  featuredList = featuredList.filter(function (f, idx, lst) {
-    return lst.indexOf(f) == idx
-  })
 
   db.put('featured', featuredList, function (err, value) {
     if (err) res.status(500).send(err)
@@ -103,6 +98,25 @@ app.get('/photos', function (req, res) {
     })
 })
 
+app.delete('/photos', function (req, res) {
+  var deletionKey = req.query.key
+
+  console.log('Delete S3 Key', deletionKey)
+
+  s3.deleteObject({
+    Bucket: app.get('s3bucket'),
+    Key: deletionKey
+  }, function (err, data) {
+    if (err) console.error(err), res.status(500).send(err)
+    else {
+      db.del(deletionKey, function (err) {
+        if (err) console.error(err)
+        res.status(200).send(data)
+      })
+    }
+  })
+})
+
 function bucketUrl (object) {
   return 'https://' + app.get('s3bucket') + '.s3.amazonaws.com/' + object.Key
 }
@@ -124,7 +138,7 @@ s3.listObjects({
           console.log(url)
           var dataObject = {
             Location: url,
-            Key: photo.Key
+            key: photo.Key
           }
           db.put(photo.Key, dataObject, function (err, value) {
             if (err) console.error(err)
@@ -132,12 +146,6 @@ s3.listObjects({
           })
         }
       }
-      /*if (filename.length === 0) {
-        console.log(s3.getSignedUrl('getObject', {
-          Bucket: app.get('s3bucket'),
-          Key: photo.Key
-        }))
-      }*/
     })
   }
 })

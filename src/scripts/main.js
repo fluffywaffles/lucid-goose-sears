@@ -8,6 +8,7 @@ var topbar         = $1('.top')
   , logoutBtn      = $1('button.logout')
   , uploadInput    = $1('#upload')
   , featuredList   = [ ]
+  , rightClickedItem = null
 
 var dragElement = originDropzone = null
 
@@ -48,15 +49,18 @@ function toggleFeaturedHandler (onoff) {
   }
 }
 
+var syncTimer
+var syncLimit = 1500
+
 function updateFeaturedList (it, feature) {
   if (feature) {
     featuredList.push(it)
-    syncFeatured()
+    syncTimer = setTimeout(syncFeatured, 1500)
   } else {
     var idx = featuredList.indexOf(it)
     if (~idx) {
       featuredList.splice(idx, 1)
-      syncFeatured()
+      syncTimer = setTimeout(syncFeatured, 1500)
     }
   }
 }
@@ -65,10 +69,14 @@ function updateFeaturedList (it, feature) {
 function onDrop (event) {
   event.preventDefault()
   event.stopPropagation()
+  console.log(event)
+  console.log(originDropzone)
+  console.log(this)
   if (originDropzone && originDropzone !== this) {
     dragElement.remove()
     this.appendChild(dragElement)
     updateFeaturedList(dragElement.children[0].src, originDropzone === unfeatured)
+    negativeSpaceCheck()
   }
 }
 
@@ -109,6 +117,7 @@ function setupOnDrag (img) {
   thumb.on('dragstart', function () {
     dragElement = this
     originDropzone = thumb.parentElement
+    if (syncTimer) clearTimeout(syncTimer)
     if (originDropzone === featuredThumbs)
       unfeatured.addClass('show-dropzone')
     else
@@ -133,7 +142,9 @@ function createThumb(s3Response) {
   img.src = s3Response.Location
   var thumb = document.createElement('div')
   thumb.className = 'thumb'
+  thumb.s3key = s3Response.key
   thumb.appendChild(img)
+  attachRightClickHandler(thumb)
   setupOnDrag(img)
 
   return thumb
@@ -167,6 +178,35 @@ uploadInput.on('change', function () {
     })
 })
 
+var menu = contextmenu([
+  {
+    label: 'Delete',
+    onclick: function (e) {
+      qwest.delete('/photos?key=' + rightClickedItem.s3key)
+        .catch(function (err, xhr, response) {
+          console.error(err)
+        })
+        .then(function  (xhr, response) {
+          console.log(response)
+          console.log('successfully deleted')
+          rightClickedItem.remove()
+        })
+    }
+  }
+])
+
+function attachRightClickHandler (el) {
+  el.on('contextmenu', function (e) {
+    rightClickedItem = this
+    console.log('Right clicked on: ', rightClickedItem)
+  })
+  contextmenu.attach(el, menu)
+}
+
+$('.featured .thumb').forEach(attachRightClickHandler)
+
+$('.unfeatured .thumb').forEach(attachRightClickHandler)
+
 qwest.get('/featured')
   .catch(function (err, xhr, response) {
     console.error(err)
@@ -193,7 +233,7 @@ qwest.get('/featured')
   })
 
 function syncFeatured () {
-  qwest.put('/featured', featuredList)
+  qwest.put('/featured', featuredList, { dataType: 'json' })
     .catch(function (err, xhr, response) {
       console.error(err)
     })

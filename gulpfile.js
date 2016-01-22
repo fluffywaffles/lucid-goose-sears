@@ -15,6 +15,13 @@ gulp.task('stylus', function () {
     .pipe(gulp.dest('public'))
 })
 
+gulp.task('css', function () {
+  gulp.src('src/styles/*.css')
+    .pipe(gulp.dest('public'))
+})
+
+gulp.task('styles', ['stylus', 'css'])
+
 gulp.task('js', function () {
   gulp.src([ 'src/scripts/qwest.min.js', 'src/scripts/*.js' ])
     .pipe($.sourcemaps.init())
@@ -24,7 +31,7 @@ gulp.task('js', function () {
     .pipe(gulp.dest('public'))
 })
 
-gulp.task('build', [ 'jade', 'stylus', 'js' ])
+gulp.task('build', [ 'jade', 'styles', 'js' ])
 
 gulp.task('watch', [ 'build' ], function () {
   gulp.watch('src/jade/**/*.jade', [ 'jade' ])
