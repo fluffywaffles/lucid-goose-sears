@@ -8,15 +8,32 @@ html
     
     link(rel='stylesheet', type='text/css', href='main.css')
     link(href='https://fonts.googleapis.com/css?family=Open+Sans', rel='stylesheet', type='text/css')
+    link(href='https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css', rel='stylesheet', type='text/css')
+    
+    mixin newsletter-item (name, date)
+      li.newsletter-item&attributes(attributes)
+        i.fa.fa-file-pdf-o
+        span.filename= name
+        span.date= date
+        i.fa.fa-download.download-btn
+        i.fa.fa-trash.delete-btn
 
   body
     .top
       h2 Newport Academy
-      span Upload new images by
+      span.info-text Upload new photos by
       button.upload Clicking Here
       input#upload.hidden(type='file')
+      button.newsletter-btn Newsletter
+      span.info-text.newsletter-btn-help Click here for
 
-    .main
+    .main.mode__photos
+      .newsletter
+        ul.newsletter-list
+          +newsletter-item('blah blah', 'blah')(class='hide template')
+          +newsletter-item('Newsletter EXAMPLE 1.pdf', '12 / 12 / 15')
+          +newsletter-item('Newsletter EXAMPLE 2.pdf', '12 / 19 / 15')
+        
       .featured
         .title
           h3 Featured Images

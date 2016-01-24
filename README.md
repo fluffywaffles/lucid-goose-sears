@@ -6,8 +6,9 @@
 
 ### BEFORE DEPLOY
 
-  1. Remove placeholder images
+  1. Remove placeholder images and newsletter listings
      - In `src/jade/index.jade`, remove all the `.thumb`s and their `img` tags - these are placeholders
+     - Also remove all the `+newsletterItem` calls that say 'EXAMPLE' in them
   2. Run `gulp build`
      - This will create the `public` directory
   3. Create directory structure on server like so:
@@ -18,32 +19,40 @@
 
 ### "Spec"
 
-  1. Upload photos (AWS S3)
+  1. Upload photos / newsletters (AWS S3)
   2. Select some number of photos to be "featured"
   3. Easily change between featured/non-featured
+  4. Easily download newsletters
+  5. Easily delete either of those things
 
 ### "Implementation"
 
-  1. Photo upload button
-     - Stops you from uploading non-photo files
+  1. Upload button
+     - Stops you from uploading non-photo files when in photos mode
+     - Stops you from uploading non-pdf files when in newsletters mode
   2. Feature/unfeature images
      - Either by clicking on them or by dragging / dropping
+  3. Deleting
+     - Right click a photo and select delete to delete
+     - Click the trash can next to a newsletter and then confirm to delete it
+  4. Newsletter 'naming'
+     - uses filename as name
 
 ### Possible Improvements
 
   - Optimistically load images before they are finally uploaded to S3 using `ObjectURL`s
   - Retry upload if fails
   - Show upload progress bar
-  - Upload on drop in window
-  - Ability to delete photos
+  - Upload on drop in window, instead of just using drag and drop for arranging
 
 ## Backend Architecture
 
-  - NODE_ENV credentials for S3
+  - NODE_ENV credentials
     - AWS_ACCESS_KEY_ID
     - AWS_SECRET_ACCESS_KEY
     - AWS_S3_BUCKET (which is 'newport-academy')
-    - These variables must be set in order to access S3
+    - BASIC_AUTH_USERNAME
+    - BASIC_AUTH_PASSWORD
     - For local development, can use a .env file in the root directory of the application folder
   - On-disk cache (LevelDB)
     - Synchronizes with S3 on server start
@@ -54,15 +63,18 @@
   - GET /featured => cache.get('featured')
   - PUT /photos => upload image to s3 and update local cache
   - PUT /featured => cache.put('featured', ...)
+  - GET /newsletters => gets list of uploaded newsletters from local cache
+  - PUT /newsletters => upload newsletter pdf to s3 and update local cache
 
 ## Front-End
 
   - Photo listing
     - See design doc sketch mockup
-  - "Featured" section
-  - Easily feature/unfeature a photo
-  - Easily upload a new photo
-  - That's it
+    - "Featured" section
+    - Easily feature/unfeature a photo
+  - Newsletter listing
+    - Download and delete buttons
+  - Easily upload a new photo or newsletter
 
 ### Front-End Architecture
 

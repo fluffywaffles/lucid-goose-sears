@@ -1,4 +1,9 @@
 var topbar         = $1('.top')
+  , main           = $1('.main')
+  , infoText       = $1('span.info-text')
+  , newsletter     = $1('.newsletter')
+  , newsletterList = $1('ul.newsletter-list')
+  , nlItemTemplate = $1('.newsletter-item.template')
   , featured       = $1('.featured')
   , featuredThumbs = $1('.featured .thumbs')
   , unfeatured     = $1('.unfeatured')
@@ -7,6 +12,8 @@ var topbar         = $1('.top')
   , uploadBtn      = $1('button.upload')
   , logoutBtn      = $1('button.logout')
   , uploadInput    = $1('#upload')
+  , viewChangeBtn  = $1('button.newsletter-btn')
+  , currentView    = main.className.split(' ')[1]
   , featuredList   = [ ]
   , rightClickedItem = null
 
@@ -14,6 +21,8 @@ var dragElement = originDropzone = null
 
 var noneFeatured = document.createElement('p')
 noneFeatured.innerHTML = 'Click on an image below to feature it!'
+
+setView(currentView)
 
 // Negative space
 function negativeSpaceCheck () {
@@ -142,7 +151,7 @@ function createThumb(s3Response) {
   img.src = s3Response.Location
   var thumb = document.createElement('div')
   thumb.className = 'thumb'
-  thumb.s3key = s3Response.key
+  thumb.s3key = s3Response.Key
   thumb.appendChild(img)
   attachRightClickHandler(thumb)
   setupOnDrag(img)
@@ -150,14 +159,47 @@ function createThumb(s3Response) {
   return thumb
 }
 
+function createNewsletterItem(item) {
+  var newItem = nlItemTemplate.cloneNode(true)
+
+  newItem.removeClass('template')
+  newItem.removeClass('hide')
+
+  var filename = newItem.querySelector('.filename')
+  var date = newItem.querySelector('.date')
+
+  filename.innerHTML = item.Key.split('/')[1]
+  date.innerHTML = (new Date(item.LastModified)).toDateString()
+
+  var dlBtn = newItem.querySelector('.download-btn')
+  var delBtn = newItem.querySelector('.delete-btn')
+
+  dlBtn.on('click', function () {
+    window.open(item.Location)
+  })
+
+  delBtn.on('click', function () {
+    var rly = confirm('Are you sure you want to delete ' + filename.innerHTML + '?')
+    if (rly) {
+      qwest.delete('/newsletters?key=' + item.Key)
+        .catch(function (err, xhr, response) {
+          console.error(err)
+        })
+        .then(function (xhr, response) {
+          console.log(response)
+          newItem.remove()
+        })
+    }
+  })
+
+  return newItem
+}
+
 uploadBtn.on('click', function () {
   uploadInput.click()
 })
 
-uploadInput.on('change', function () {
-  console.log(this.files)
-  var upload = this.files[0]
-
+function uploadPhoto (upload) {
   if (!upload.type.startsWith('image/')) {
     console.error('Tried to upload a non-image file, you fool.')
     alert('That doesn\'t look like an image file; the upload cannot continue.')
@@ -176,6 +218,37 @@ uploadInput.on('change', function () {
       var thumb = createThumb(response)
       unfeatured.appendChild(thumb)
     })
+}
+
+function uploadNewsletter (upload) {
+  if (!~upload.type.indexOf('pdf')) {
+    console.error('Tried to upload non-pdf newsletter.')
+    alert('Whoops! Newsletter files must be pdfs.')
+    return
+  }
+
+  var fd = new FormData()
+  fd.append('newsletter', upload)
+
+  qwest.put('/newsletters', fd)
+    .catch(function (err, xhr, response) {
+      console.error(err)
+    })
+    .then(function (xhr, response) {
+      console.info(response)
+      var newsletterItem = createNewsletterItem(response)
+      newsletterList.appendChild(newsletterItem)
+    })
+}
+
+uploadInput.on('change', function () {
+  console.log(this.files)
+  var upload = this.files[0]
+
+  if (currentView === 'mode__photos')
+    uploadPhoto(upload)
+  else if (currentView === 'mode__newsletter')
+    uploadNewsletter(upload)
 })
 
 var menu = contextmenu([
@@ -232,6 +305,18 @@ qwest.get('/featured')
     })
   })
 
+qwest.get('/newsletters')
+  .catch(function (err, xhr, response) {
+    console.error(err)
+  })
+  .then(function (xhr, response) {
+    response.forEach(function (s3Pdf) {
+      console.log(s3Pdf)
+      var newsletterItem = createNewsletterItem(s3Pdf)
+      newsletterList.appendChild(newsletterItem)
+    })
+  })
+
 function syncFeatured () {
   qwest.put('/featured', featuredList, { dataType: 'json' })
     .catch(function (err, xhr, response) {
@@ -241,3 +326,53 @@ function syncFeatured () {
       console.log(response)
     })
 }
+
+function setView (mode) {
+  if (mode === 'mode__newsletter') {
+    newsletter.removeClass('hide')
+  } else {
+    featured.removeClass('hide')
+    unfeatured.removeClass('hide')
+  }
+
+  setTimeout(function () {
+    main.removeClass(currentView)
+    main.addClass(mode)
+  }, 100)
+
+  setTimeout(function () {
+    if (mode === 'mode__newsletter') {
+      featured.addClass('hide')
+      unfeatured.addClass('hide')
+    } else {
+      newsletter.addClass('hide')
+    }
+  }, 400)
+
+  var photos = mode === 'mode__photos'
+  var btn = photos ? 'Newsletters' : 'Photos'
+  var info = infoText.innerHTML.replace(
+    btn.toLowerCase(),
+    btn === 'Photos' ? 'newsletters' : 'photos'
+  )
+
+  viewChangeBtn.innerHTML = btn
+  infoText.innerHTML = info
+
+  main.removeClass(currentView)
+  main.addClass(mode)
+  currentView = mode
+}
+
+function toggleView () {
+  if (currentView === 'mode__photos') {
+    setView('mode__newsletter')
+  }
+  else if (currentView === 'mode__newsletter') {
+    setView('mode__photos')
+  }
+}
+
+viewChangeBtn.on('click', function () {
+  toggleView()
+})

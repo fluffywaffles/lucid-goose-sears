@@ -21,11 +21,11 @@ h1, h2, h3
   margin-right 10px
   display inline-block
 
-  & + span
-    color rgba(0,0,0,0.5)
+.info-text
+  color rgba(0,0,0,0.5)
 
-.top
-  position relative
+.newsletter-btn-help
+  float right
 
 button
   appearance none
@@ -36,13 +36,26 @@ button
   border-radius 2px
   cursor pointer
 
-button.logout
-  position absolute
-  top 10px
-  right 10px
+button.newsletter-btn
+  float right
+  margin-left 10px
 
 #upload
   display none
+
+.show-dropzone
+  position relative
+
+.show-dropzone:after
+  position absolute
+  top 0
+  left 0
+  width 100%
+  height 100%
+  border 2px dashed gray
+  color gray
+  box-sizing border-box
+  content 'Drop to move image'
 
 .featured
   width 100%
@@ -69,24 +82,13 @@ button.logout
     display table-cell
     vertical-align middle
 
-.show-dropzone
-  position relative
-
-.show-dropzone:after
-  position absolute
-  top 0
-  left 0
-  width 100%
-  height 100%
-  border 2px dashed gray
-  color gray
-  box-sizing border-box
-  content 'Drop to move image'
-
 .unfeatured
   width 100%
   white-space normal
   padding 20px
+
+.featured, .unfeatured
+  transition all ease 400ms
 
 .thumb
   height 160px
@@ -99,3 +101,60 @@ button.logout
     padding 0 10px
     cursor pointer
     margin 0 auto
+
+.hide
+  display none
+
+.mode__newsletter
+  .featured, .unfeatured
+    opacity 0
+    height 0
+
+.mode__photos
+  .newsletter
+    opacity 0
+    height 0
+    margin-top 0
+
+.newsletter
+  transition all ease 400ms
+  margin-top 100px
+
+.newsletter-list
+  list-style-type none
+  width 80%
+  max-width 800px
+  margin 0 auto
+  padding 0
+
+  border 1px solid rgba(0,0,0,0.2)
+  border-radius 2px
+
+.newsletter-item
+  width 100%
+  padding 5px 2px
+  border-bottom 1px solid rgba(0,0,0,0.2)
+
+  .filename, .date, .download-btn, .delete-btn, .fa-file-pdf-o
+    display table-cell
+
+  .filename, .date
+    width 50%
+
+  .download-btn, .delete-btn, .fa-file-pdf-o
+    width 50px
+
+  .filename
+    margin-left 10px
+
+  .date
+    margin-right 10px
+
+  .download-btn
+    margin-right 10px
+
+  .download-btn, .delete-btn
+    cursor pointer
+
+  .fa.fa-file-pdf-o, .download-btn, .delete-btn
+    padding 5px
