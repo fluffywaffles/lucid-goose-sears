@@ -23,6 +23,7 @@ var db = level('./photos', {
 var app = express()
 
 app.use(bodyParser.json())
+// NOTE(jordan): busboy handles FormData
 app.use(busboy())
 app.set('s3bucket', process.env['AWS_S3_BUCKET'])
 
@@ -55,7 +56,8 @@ app.put('/:resource', function (req, res) {
       s3.upload({
         Bucket: app.get('s3bucket'),
         Key: req.params.resource + '/' + filename,
-        Body: file
+        Body: file,
+        Metadata: JSON.parse(fieldName) // all the other shit we need
       }, function (err, data) {
         if (err) console.error(err), res.status(500).send(err)
         else {

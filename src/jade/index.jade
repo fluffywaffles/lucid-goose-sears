@@ -34,19 +34,20 @@ html
           +newsletter-item('Newsletter EXAMPLE 1.pdf', '12 / 12 / 15')
           +newsletter-item('Newsletter EXAMPLE 2.pdf', '12 / 19 / 15')
         
-      .featured
-        .title
-          h3 Featured Images
-          span Click or drag to interchange with unfeatured images, right click to delete
-        .thumbs
+      .photos
+        .featured
+          .title
+            h3 Featured Images
+            span Click or drag to interchange with unfeatured images, right click to delete
+          .thumbs
+            .thumb
+              img(src='//placehold.it/350x150?0')
+            .thumb
+              img(src='//placehold.it/350x150?1')
+        .unfeatured
           .thumb
-            img(src='//placehold.it/350x150?0')
+            img(src='//placehold.it/350x150?8')
           .thumb
-            img(src='//placehold.it/350x150?1')
-      .unfeatured
-        .thumb
-          img(src='//placehold.it/350x150?8')
-        .thumb
-          img(src='//placehold.it/350x150?9')
+            img(src='//placehold.it/350x150?9')
 
     script(type='text/javascript', src='main.js')
