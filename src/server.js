@@ -53,18 +53,20 @@ app.get('/featured', function (req, res) {
 app.put('/:resource', function (req, res) {
   if (req.busboy) {
     req.busboy.on('file', function (fieldName, file, filename, encoding, mimetype) {
+      var md = JSON.parse(unescape(fieldName))
       s3.upload({
         Bucket: app.get('s3bucket'),
         Key: req.params.resource + '/' + filename,
         Body: file,
-        Metadata: JSON.parse(fieldName) // all the other shit we need
+        Metadata: md // all the other shit we need
       }, function (err, data) {
         if (err) console.error(err), res.status(500).send(err)
         else {
           var dataObject = {
             Location: data.Location,
             Key: data.key,
-            LastModified: new Date()
+            LastModified: new Date(),
+            Metadata: md
           }
           db.put(data.key, dataObject, function (err, value) {
             if (err) console.error(err), res.status(500).send(err)
@@ -132,33 +134,53 @@ function bucketUrl (object) {
   return 'https://' + app.get('s3bucket') + '.s3.amazonaws.com/' + object.Key
 }
 
+var noStartupErr = true
+
+// NOTE(jordan): ewwww pyramids of doom
 s3.listObjects({
   Bucket: app.get('s3bucket')
 }, function (err, data) {
-  if (err) console.error(err)
+  if (err) (noStartupErr = false), console.error(err)
   else {
-    console.log(data)
     console.log('Loaded S3 Items! Now to add to cache...')
     data.Contents.forEach(function (photo) {
-      if (photo.Key.search(/(photos|newsletters)\//) === 0) {
-        console.log(photo.Key)
-        var filename = photo.Key.split('/')[1]
-        if (filename.length > 0) {
-          var url = bucketUrl(photo)
-          console.log(url)
-          var dataObject = {
-            Location: url,
-            Key: photo.Key,
-            LastModified: photo.LastModified
+      s3.headObject({
+        Bucket: app.get('s3bucket'),
+        Key: photo.Key
+      }, function (err, metadata) {
+        if (err) (noStartupErr = false), console.error(err)
+        else {
+          if (photo.Key.search(/(photos|newsletters)\//) === 0) {
+            var filename = photo.Key.split('/')[1]
+            if (filename.length > 0) {
+              var url = bucketUrl(photo)
+              console.log('\n\n!! Cache data for:', url)
+              var dataObject = {
+                Location: url,
+                Key: photo.Key,
+                LastModified: photo.LastModified,
+                Metadata: metadata.Metadata // NOTE(jordan): fuc u s3
+              }
+              console.log('\n\n==> Data to cache:\n\n', dataObject)
+              console.log('\n\n===> METADATA:\n\n', metadata)
+              db.put(photo.Key, dataObject, function (err, value) {
+                if (err) console.error(err)
+                else {
+                  console.info('\n\n==> Successfully cached data for:\n\n', filename)
+                }
+              })
+            }
           }
-          db.put(photo.Key, dataObject, function (err, value) {
-            if (err) console.error(err)
-            else console.info('Successfully cached URL for ', filename)
-          })
         }
-      }
+      })
     })
+
+    if (noStartupErr) startServer()
+    else console.error('APP DID NOT START DUE TO FATAL ERRORS CACHING S3 DATA')
   }
 })
 
-http.createServer(app).listen(3000)
+function startServer () {
+  http.createServer(app).listen(3000)
+  console.log('Startup successful! App listening on port 3000.')
+}

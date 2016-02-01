@@ -59,7 +59,7 @@ button.newsletter-btn
 
 .featured
   width 100%
-  height 240px
+  height 275px
   overflow-x auto
   overflow-y hidden
   white-space nowrap
@@ -102,6 +102,12 @@ button.newsletter-btn
     cursor pointer
     margin 0 auto
 
+  .title
+    text-align center
+
+  .title, .caption
+    padding 0 10px
+
 .hide
   display none
 
@@ -129,6 +135,14 @@ button.newsletter-btn
 
   border 1px solid rgba(0,0,0,0.2)
   border-radius 2px
+
+  p
+    margin 0
+    padding 10px
+    color gray
+    border-bottom 1px solid rgba(0,0,0,0.2)
+    i
+      padding 0 4px
 
 .newsletter-item
   width 100%
@@ -158,3 +172,11 @@ button.newsletter-btn
 
   .fa.fa-file-pdf-o, .download-btn, .delete-btn
     padding 5px
+
+@media all and (max-width: 760px)
+  .top
+    height 100px
+    h2
+      display inline-table
+      clear both
+      width 100%

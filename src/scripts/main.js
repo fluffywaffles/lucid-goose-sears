@@ -7,6 +7,7 @@ var topbar         = $1('.top')
   , nlItemTemplate = $1('.newsletter-item.template')
   , featured       = $1('.featured')
   , featuredThumbs = $1('.featured .thumbs')
+  , thumbTemplate  = $1('.thumb.template')
   , unfeatured     = $1('.unfeatured')
   , featuredImg    = $('.featured img')
   , unfeaturedImg  = $('.unfeatured img')
@@ -226,16 +227,26 @@ unfeaturedImg.forEach(setupOnDrag)
 // NOTE(jordan): create new elements for uploads obtained from s3
 // NOTE(jordan): thumbs
 function createThumb(s3Response) {
-  var img = document.createElement('img')
+  var newThumb = thumbTemplate.cloneNode(true)
+
+  newThumb.removeClass('template')
+  newThumb.removeClass('hide')
+
+  var title = newThumb.querySelector('.title')
+    , img = newThumb.querySelector('img')
+    , caption = newThumb.querySelector('.caption')
+
+  title.innerHTML = s3Response.Metadata.title
+
   img.src = s3Response.Location
-  var thumb = document.createElement('div')
-  thumb.className = 'thumb'
-  thumb.s3key = s3Response.Key
-  thumb.appendChild(img)
-  attachRightClickMenu(thumb)
+  img.title = caption.innerHTML = s3Response.Metadata.caption
+
+  newThumb.s3key = s3Response.Key
+
+  attachRightClickMenu(newThumb)
   setupOnDrag(img)
 
-  return thumb
+  return newThumb
 }
 
 // NOTE(jordan): newsletter items
@@ -248,7 +259,9 @@ function createNewsletterItem(item) {
   var filename = newItem.querySelector('.filename')
   var date = newItem.querySelector('.date')
 
-  filename.innerHTML = item.Key.split('/')[1]
+  //filename.innerHTML = item.Key.split('/')[1]
+  filename.innerHTML = item.Metadata.title
+  filename.title = item.Key.split('/')[1]
   date.innerHTML = (new Date(item.LastModified)).toDateString()
 
   var dlBtn = newItem.querySelector('.download-btn')
@@ -281,15 +294,17 @@ uploadBtn.on('click', function () {
 })
 
 // NOTE(jordan): upload utilities
-function uploadPhoto (upload) {
+function uploadPhoto (upload, title, caption) {
   if (!upload.type.startsWith('image/')) {
     console.error('Tried to upload a non-image file, you fool.')
     alert('That doesn\'t look like an image file; the upload cannot continue.')
     return
   }
 
+  var key = { title: title, caption: caption }
+
   var fd = new FormData()
-  fd.append('photo', upload)
+  fd.append(JSON.stringify(key), upload)
 
   qwest.put('/photos', fd)
     .catch(function (err, xhr, response) {
@@ -302,15 +317,17 @@ function uploadPhoto (upload) {
     })
 }
 
-function uploadNewsletter (upload) {
+function uploadNewsletter (upload, title) {
   if (!~upload.type.indexOf('pdf')) {
     console.error('Tried to upload non-pdf newsletter.')
     alert('Whoops! Newsletter files must be pdfs.')
     return
   }
 
+  var key = { title: title }
+
   var fd = new FormData()
-  fd.append('newsletter', upload)
+  fd.append(JSON.stringify(key), upload)
 
   qwest.put('/newsletters', fd)
     .catch(function (err, xhr, response) {
@@ -328,10 +345,15 @@ uploadInput.on('change', function () {
   console.log(this.files)
   var upload = this.files[0]
 
-  if (currentView === 'mode__photos')
-    uploadPhoto(upload)
-  else if (currentView === 'mode__newsletter')
-    uploadNewsletter(upload)
+  if (currentView === 'mode__photos') {
+    var title = prompt('What is the photo\'s title?')
+    var caption = prompt('What is the photo\'s caption?')
+    uploadPhoto(upload, title, caption)
+  }
+  else if (currentView === 'mode__newsletter') {
+    var title = prompt('What is the newsletter\'s title?')
+    uploadNewsletter(upload, title)
+  }
 })
 
 // NOTE(jordan): create a right click menu for photos
